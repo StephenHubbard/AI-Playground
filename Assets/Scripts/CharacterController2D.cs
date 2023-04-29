@@ -8,6 +8,8 @@ public class CharacterController2D : MonoBehaviour
     [SerializeField] private float jumpForce = 700f;
     [SerializeField] private Transform feet;
     [SerializeField] private GameObject shadow;
+    [SerializeField] private GameObject _projectile;
+    [SerializeField] private Transform _projectileSpawnPoint;
 
     private Rigidbody2D rb;
     private bool isGrounded = false;
@@ -36,6 +38,17 @@ public class CharacterController2D : MonoBehaviour
         else if (horizontalInput < 0 && facingRight)
         {
             Flip();
+        }
+
+        ShootWand();
+    }
+
+    private void ShootWand() {
+        if (Input.GetMouseButtonDown(0)) {
+            GameObject newProjectile = Instantiate(_projectile, _projectileSpawnPoint.transform.position, Quaternion.identity);
+            Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 projectileDir = worldMousePos - _projectileSpawnPoint.transform.position;
+            newProjectile.transform.right = projectileDir;
         }
     }
 

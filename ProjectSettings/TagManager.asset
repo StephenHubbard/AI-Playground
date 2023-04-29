@@ -47,3 +47,6 @@ TagManager:
   - name: GameObject
     uniqueID: 1203480909
     locked: 0
+  - name: Foreground Plants
+    uniqueID: 1447975249
+    locked: 0
