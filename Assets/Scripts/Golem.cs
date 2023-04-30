@@ -18,8 +18,8 @@ public class Golem : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject.GetComponent<CharacterController2D>()) {
             _animator.SetTrigger("Erupt");
-            GameObject dustVFX = Instantiate(_dustVFX, transform.position, Quaternion.identity);
-            dustVFX.transform.SetParent(_childGolemSprite);
+            GameObject dustVFX = Instantiate(_dustVFX, new Vector3(transform.position.x, transform.position.y + 3f, 0), Quaternion.identity);
+            dustVFX.GetComponent<AudioSource>().Play();
             Camera.main.gameObject.GetComponent<AudioSource>().clip = _bossAudioMusic;
             Camera.main.gameObject.GetComponent<AudioSource>().Play();
         }
