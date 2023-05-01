@@ -15,9 +15,11 @@ public class CharacterController2D : MonoBehaviour
     private bool isGrounded = false;
     private float horizontalInput;
     private bool facingRight = true;
+    private Animator _animator;
 
     void Start()
     {
+        _animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
     }
 
@@ -44,6 +46,8 @@ public class CharacterController2D : MonoBehaviour
     }
 
     private void ShootWand() {
+        if (_projectile == null) { return; }
+
         if (Input.GetMouseButtonDown(0)) {
             GameObject newProjectile = Instantiate(_projectile, _projectileSpawnPoint.transform.position, Quaternion.identity);
             Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -60,6 +64,12 @@ public class CharacterController2D : MonoBehaviour
 
     void Move()
     {
+        if (rb.velocity.x > .1f || rb.velocity.x < -.1f) {
+            _animator.SetBool("isRunning", true);
+        } else {
+            _animator.SetBool("isRunning", false);
+        }
+
         rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
     }
 
