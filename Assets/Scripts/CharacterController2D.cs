@@ -7,26 +7,28 @@ public class CharacterController2D : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 700f;
     [SerializeField] private Transform feet;
-    [SerializeField] private GameObject shadow;
-    [SerializeField] private GameObject _projectile;
-    [SerializeField] private Transform _projectileSpawnPoint;
+    [SerializeField] private float baseGravityScale = 1f; // the default gravity scale
+    [SerializeField] private float maxGravityScale = 3f; // the maximum gravity scale
+    [SerializeField] private float gravityScaleIncrement = 0.2f; // the amount to increase gravity scale per FixedUpdate() while airborne
 
     private Rigidbody2D rb;
     private bool isGrounded = false;
     private float horizontalInput;
     private bool facingRight = true;
-    private Animator _animator;
+    private Animator animator;
+    private float currentGravityScale;
+    private float timeInAir = 0f;
 
     void Start()
     {
-        _animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        currentGravityScale = baseGravityScale;
     }
 
     void Update()
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
-        MoveShadow();
 
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
@@ -41,55 +43,53 @@ public class CharacterController2D : MonoBehaviour
         {
             Flip();
         }
-
-        ShootWand();
-    }
-
-    private void ShootWand() {
-        if (_projectile == null) { return; }
-
-        if (Input.GetMouseButtonDown(0)) {
-            GameObject newProjectile = Instantiate(_projectile, _projectileSpawnPoint.transform.position, Quaternion.identity);
-            Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 projectileDir = worldMousePos - _projectileSpawnPoint.transform.position;
-            newProjectile.transform.right = projectileDir;
-        }
     }
 
     void FixedUpdate()
     {
         Move();
         CheckGround();
+
+        // If the character is not grounded, increase gravity scale
+        if (!isGrounded)
+        {
+            timeInAir += Time.deltaTime;
+            animator.SetBool("isJumping", true);
+
+            if (timeInAir > .35f) {
+                currentGravityScale += gravityScaleIncrement * Time.fixedDeltaTime;
+                currentGravityScale = Mathf.Min(currentGravityScale, maxGravityScale);
+                rb.gravityScale = baseGravityScale * currentGravityScale;
+            }
+        }
+        else
+        {
+            timeInAir = 0f;
+            currentGravityScale = baseGravityScale;
+            rb.gravityScale = baseGravityScale;
+            animator.SetBool("isJumping", false);
+        }
     }
 
     void Move()
     {
-        if (rb.velocity.x > .1f || rb.velocity.x < -.1f) {
-            _animator.SetBool("isRunning", true);
-        } else {
-            _animator.SetBool("isRunning", false);
+        if (rb.velocity.x > .1f || rb.velocity.x < -.1f)
+        {
+            animator.SetBool("isRunning", true);
+        }
+        else
+        {
+            animator.SetBool("isRunning", false);
         }
 
         rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
     }
 
-    void MoveShadow() {
-        RaycastHit2D hit = Physics2D.Raycast(feet.transform.position, Vector2.down, 7f, LayerMask.GetMask("Ground"));
-
-        if (hit.collider != null)
-        {
-            shadow.SetActive(true);
-            shadow.transform.position = hit.point;
-        }
-        else
-        {
-            shadow.SetActive(false);
-        }
-    }
-
     void Jump()
     {
-        rb.AddForce(new Vector2(0f, jumpForce));
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce * Time.fixedDeltaTime);
+        animator.SetBool("isJumping", true);
+        animator.SetBool("isRunning", false);
     }
 
     void CheckGround()
